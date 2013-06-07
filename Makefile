@@ -25,6 +25,7 @@ build/%.o: src/%.cpp
 	g++ ${CFLAGS} -c -o $@ $<
 
 lib/%.so: build/%.o
+	@ mkdir -p lib
 	g++ ${LDFLAGS} -bundle -undefined dynamic_lookup -o $@ $<
 
 flat: build shaders

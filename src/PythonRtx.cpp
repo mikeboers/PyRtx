@@ -7,7 +7,48 @@
 
 static bool initialized = false;
 static PyObject *runtime_module;
-static PyObject *runtime_entrypoint;
+
+
+static PyObject* dispatch(char const *func_name, PyObject *args) {
+
+    if (!initialized) {
+        Py_Initialize();
+        runtime_module = PyImport_ImportModule("PythonRtx");
+        if (!runtime_module) {
+            printf("PythonRtx: could not import PythonRtx:\n");
+            PyErr_Print();
+            return NULL;
+        }
+    }
+
+    PyObject *func = PyObject_GetAttrString(runtime_module, func_name);
+    if (!func) {
+        printf("PythonRtx: could not find PythonRtx.%s:\n", func_name);
+        PyErr_Print();
+        return NULL;
+    }
+
+    PyObject *res = PyObject_CallObject(func, args);
+
+    if (!res) {
+        printf("PythonRtx: exception while calling PythonRtx.%s:\n", func_name);
+        PyErr_Print();
+    }
+
+    Py_DECREF(func);
+    return res;
+
+}
+
+static PyObject* dispatch(char const *func_name, unsigned int argc, char const **argv) {
+    PyObject *args = PyTuple_New(argc);
+    for (unsigned int i = 0; i < argc; i++) {
+        PyTuple_SET_ITEM(args, i, PyString_FromString(argv[i]));
+    }
+    PyObject *res = dispatch(func_name, args);
+    Py_DECREF(args);
+    return res;
+}
 
 
 class PythonRtx : public RtxPlugin
@@ -25,53 +66,49 @@ public:
 int PythonRtx::Open (TextureCtx &ctx)
 {
     ctx.numChannels = 3;
-    ctx.minRes.X = 1024;
-    ctx.minRes.Y = 1024;
-    ctx.maxRes.X = 1024;
-    ctx.maxRes.Y = 1024;
-    ctx.sWrap = TextureCtx::k_Clamp;
-    ctx.tWrap = TextureCtx::k_Clamp;
-    ctx.dataType = TextureCtx::k_Float;
+    ctx.minRes.X = ctx.minRes.Y = ctx.maxRes.X = ctx.maxRes.Y = 1;
+    ctx.sWrap = ctx.tWrap = TextureCtx::k_Clamp;
+    ctx.dataType = TextureCtx::k_Byte;
     ctx.pyramidType = TextureCtx::k_MIP;
     ctx.isLocked = false;
 
-    printf("PythonRtx::Open(...) with %d args.\n", ctx.argc);
-    for (int i = 0; i < ctx.argc; i++) {
-        printf("\t%d: \"%s\"\n", i, ctx.argv[i]);
-    }
-
-    if (!initialized) {
-        Py_Initialize();
-        runtime_module = PyImport_ImportModule("python_for_renderman.runtime");
-        if (!runtime_module) {
-            printf("Python could not import 'python_for_renderman.runtime'\n");
-            return 1;
-        }
-        runtime_entrypoint = PyObject_GetAttrString(runtime_module, "entrypoint");
-        if (!runtime_entrypoint) {
-            printf("Python 'entrypoint' function missing from 'python_for_renderman.runtime'.\n");
-            return 2;
-        }
-        initialized = true;
-    }
-
-    PyObject *args = PyTuple_New(ctx.argc);
-    for (int i = 0; i < ctx.argc; i++) {
-        PyTuple_SET_ITEM(args, i, PyString_FromString(ctx.argv[i]));
-    }
-
-    PyObject *res = PyObject_CallObject(runtime_entrypoint, args);
-    Py_DECREF(args);
-    
+    PyObject *res = dispatch("get_texture", ctx.argc, ctx.argv);
     if (!res) {
-        printf("Error while executing entrypoint:\n");
-        PyErr_Print();
-        return 3;
-    } else {
-        Py_DECREF(res);
+        return 1;
     }
 
-    // Could set ctx.userData here...
+    if (!PyTuple_CheckExact(res) || PyTuple_GET_SIZE(res) != 4) {
+        printf("PythonRtx: must get a tuple with 4 objects\n");
+        Py_DECREF(res);
+        return 2;
+    }
+
+    PyObject *width = PyTuple_GET_ITEM(res, 0);
+    PyObject *height = PyTuple_GET_ITEM(res, 1);
+    PyObject *depth = PyTuple_GET_ITEM(res, 2);
+    PyObject *data = PyTuple_GET_ITEM(res, 3);
+
+    if (!PyInt_CheckExact(width) || !PyInt_CheckExact(height) || !PyInt_CheckExact(depth)) {
+        printf("PythonRtx: width, height, and depth must be integers\n");
+        Py_DECREF(res);
+        return 2;
+    }
+
+    ctx.minRes.X = ctx.maxRes.X = PyInt_AS_LONG(width);
+    ctx.minRes.Y = ctx.maxRes.Y = PyInt_AS_LONG(height);
+    ctx.numChannels = PyInt_AS_LONG(depth);
+
+    if (!PyString_CheckExact(data)) {
+        printf("PythonRtx: data must be a string\n");
+        Py_DECREF(res);
+        return 3;
+    }
+
+    Py_INCREF(data);
+    Py_DECREF(res);
+
+    ctx.userData = (void*) data;
+
     return 0;
 }
 
@@ -79,27 +116,19 @@ int PythonRtx::Open (TextureCtx &ctx)
 int
 PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 
-    /*
-    printf("PythonRtx::Fill(...):\n");
-    printf("\timgRes: %d, %d\n", req.imgRes.X, req.imgRes.Y);
-    printf("\ttile.offset: %d, %d\n", req.tile.offset.X, req.tile.offset.Y);
-    printf("\ttile.size: %d, %d\n", req.tile.size.X, req.tile.size.Y);
-    //*/
+    PyObject *py_data = (PyObject*)ctx.userData;
 
-    RtFloat *fdata = (RtFloat *)req.tileData;
+    char *src_data = py_data ? PyString_AS_STRING(py_data) : NULL;
+    char *dst_data = (char *)req.tileData;
+
     for (int yi = 0, y = req.tile.offset.Y * req.tile.size.Y; yi < req.tile.size.Y; yi++, y++) {
     for (int xi = 0, x = req.tile.offset.X * req.tile.size.X; xi < req.tile.size.X; xi++, x++) {
     for (int ci = 0, c = req.channelOffset; ci < req.numChannels; ci++, c++) {
-        switch (c) {
-            case 0:
-                *(fdata++) = float(x) / float(req.imgRes.X);
-                break;
-            case 1:
-                *(fdata++) = float(y) / float(req.imgRes.Y);
-                break;
-            case 2:
-                *(fdata++) = 0.5;
-                break;
+        if (src_data) {
+            int offset = c + req.numChannels * x + req.numChannels * req.imgRes.X * y;
+            *(dst_data++) = src_data[offset];
+        } else {
+            *(dst_data++) = 127;
         }
     }}}
     
@@ -111,7 +140,7 @@ int PythonRtx::Close (TextureCtx& ctx)
 {
     printf("PythonRtx::Close()\n");
     if (ctx.userData) {
-        free (ctx.userData);
+        Py_DECREF((PyObject*)ctx.userData);
     }
     return 0;
 }

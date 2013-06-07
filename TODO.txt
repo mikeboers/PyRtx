@@ -2,7 +2,7 @@
 
 - Rtx plugin which uses returned data as an image:
 
-  - texture: "rtxplugin:Python?entrypoint=package.module:function"
+  - texture: "rtxplugin:Python?module=package.module&function=entrypoint"
   - query args:
       - "entrypoint" OR "module" and "function"
       - "args": string to pass as args

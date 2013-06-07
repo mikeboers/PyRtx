@@ -1,4 +1,9 @@
+.DS_Store
+
 *.so
 *.slo
-*.tif
 *.pyc
+*.tif
+
+/textures
+/venv
