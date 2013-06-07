@@ -1,3 +1,13 @@
+
+- make minimally viable SO that exposes the Rtx API
+  - how to get PRMan to use it?
+
+
+
+
+
+---
+
 - embed Python into a RSL shadeop
     
     python_call('package.module:function', Nn, P)
