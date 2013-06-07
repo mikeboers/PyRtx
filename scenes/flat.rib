@@ -1,6 +1,6 @@
 Display "render.tif" "tiff" "rgba"
 Projection "perspective" "fov" [21.831]
-Format 960 540 1
+Format 640 480 1
 
 Option "searchpath"
     "shader" "shaders:@"
@@ -9,6 +9,7 @@ Option "searchpath"
 Translate 0 -1.207 14.142
 Rotate 59.036 0 1 0
 Rotate -26.565 6 0 10
+Rotate 180 0 1 0
 
 WorldBegin
     

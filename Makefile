@@ -4,11 +4,16 @@
 SHADERS := $(wildcard shaders/*.sl)
 SHADER_OBJS := ${SHADERS:%.sl=%.slo}
 
-.PHONY: default build shaders flat
+LIBS := lib/Gradient.so lib/PythonRtx.so
+
+CFLAGS = $(shell python-config --cflags) -I$$RMANTREE/include
+LDFLAGS = $(shell python-config --ldflags)
+
+.PHONY: default build shaders flat clean
 
 default: build shaders
 
-build: lib/Gradient.so
+build: ${LIBS}
 
 shaders: ${SHADER_OBJS}
 
@@ -17,10 +22,15 @@ shaders/%.slo: shaders/%.sl
 
 build/%.o: src/%.cpp
 	@ mkdir -p build
-	g++ -I$$RMANTREE/include -c -o $@ $<
+	g++ ${CFLAGS} -c -o $@ $<
 
 lib/%.so: build/%.o
-	g++ -bundle -undefined dynamic_lookup -o $@ $<
+	g++ ${LDFLAGS} -bundle -undefined dynamic_lookup -o $@ $<
 
 flat: build shaders
 	render scenes/flat.rib
+
+clean:
+	- rm -rf build
+	- rm lib/*.so
+	- rm shaders/*.slo
