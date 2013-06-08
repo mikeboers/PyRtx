@@ -59,7 +59,6 @@ public:
     virtual int Open (TextureCtx& ctx);
     virtual int Fill (TextureCtx& ctx, FillRequest& req);
     virtual int Close (TextureCtx& ctx);
-
 };
 
 
@@ -98,10 +97,22 @@ int PythonRtx::Open (TextureCtx &ctx)
     ctx.minRes.Y = ctx.maxRes.Y = PyInt_AS_LONG(height);
     ctx.numChannels = PyInt_AS_LONG(depth);
 
+    printf("PythonRtx: data dimensions: %d, %d, %d\n", ctx.minRes.X, ctx.minRes.Y, ctx.numChannels);
+    if (ctx.minRes.X <= 0 || ctx.minRes.Y <= 0 || ctx.numChannels <= 0) {
+        printf("PythonRtx: dimensions must be >= 1\n");
+        return 3;
+    }
+
     if (!PyString_CheckExact(data)) {
         printf("PythonRtx: data must be a string\n");
         Py_DECREF(res);
-        return 3;
+        return 4;
+    }
+
+    int expected = ctx.minRes.X * ctx.minRes.Y * ctx.numChannels;
+    if (PyString_GET_SIZE(data) != expected) {
+        printf("PythonRtx: expected %d bytes, but got %d\n", expected, (int)PyString_GET_SIZE(data));
+        return 5;
     }
 
     Py_INCREF(data);
