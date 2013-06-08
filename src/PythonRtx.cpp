@@ -1,12 +1,21 @@
 #include <cstdlib>
 #include <cstdio>
 
+#include "ri.h"
 #include "RtxPlugin.h"
 #include "Python.h"
 
 
 static bool initialized = false;
 static PyObject *runtime_module;
+
+
+static int is_power_of_two (unsigned int x) {
+    while (((x & 1) == 0) && x > 1) {
+        x >>= 1;
+    }
+    return x == 1;
+}
 
 
 static PyObject* dispatch(char const *func_name, PyObject *args) {
@@ -105,6 +114,11 @@ int PythonRtx::Open (TextureCtx &ctx)
     printf("PythonRtx: data dimensions: %d, %d, %d\n", ctx.minRes.X, ctx.minRes.Y, ctx.numChannels);
     if (ctx.minRes.X <= 0 || ctx.minRes.Y <= 0 || ctx.numChannels <= 0) {
         printf("PythonRtx: dimensions must be >= 1\n");
+        return 3;
+    }
+
+    if (!is_power_of_two(_width) || !is_power_of_two(_height)) {
+        printf("PythonRtx: dimensions must be powers of 2\n");
         return 3;
     }
 
