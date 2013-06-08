@@ -1,18 +1,19 @@
 
+Rtx Plugin
+----------
 
-- URI: "rtxplugin:Python?module=package.module&function=entrypoint"
-  - module is required
-  - function defaults to "rtx_open"
-  - remaining args are passed as kwargs
+- aquire the GIL
+  http://docs.python.org/2/c-api/init.html#non-python-created-threads
 
 
-- embed Python into a RSL shadeop
-    
-    python_call('package.module:function', Nn, P)
-    python_exec('import mymodule; return mymodule.something(%s, %s)', Nn, P)
+RSL Shadeop
+-----------
 
-    - Should there be seperate functions for passing numpy arrays of data,
-      should they all do that, or should they all call for each point?
+python_call('package.module:function', Nn, P)
+python_exec('import mymodule; return mymodule.something(%s, %s)', Nn, P)
+
+- Should there be seperate functions for passing numpy arrays of data,
+  should they all do that, or should they all call for each point?
 
 - expose all functions of the PRMan C APIs
 - expose all RSL functions (via suspending the calling thread via greenlets,
@@ -30,12 +31,6 @@
       https://developers.google.com/maps/documentation/streetview/
       cube maps from 90° sections? http://maps.googleapis.com/maps/api/streetview?size=800x800&location=40.7201,%20-73.988354&fov=90&heading=90&pitch=0&sensor=false
     - grab tweets with GPS data, and render them with reflections from where they were taken
-
-      
-- Create a Rtx plugin so that Python can provide texture data.
-  See: http://renderman.pixar.com/resources/current/rps/rtxPlugin.html
-
-  - 
 
 - we can take varargs, and there is an RslContext!
 - expose numpy arrays, and or lists of data?
