@@ -12,17 +12,25 @@ class PythonRtx : public RtxPlugin
 public:
     PythonRtx() {}
     virtual ~PythonRtx() {}
-    virtual int Open (TextureCtx& ctx);
-    virtual int Fill (TextureCtx& ctx, FillRequest& req);
-    virtual int Close (TextureCtx& ctx);
+    virtual int Open (TextureCtx &ctx);
+    virtual int Fill (TextureCtx &ctx, FillRequest &req);
+    virtual int Close (TextureCtx &ctx);
 protected:
     int _width, _height;
+    int _Open(TextureCtx &ctx);
 
 };
 
 
-int PythonRtx::Open (TextureCtx &ctx)
-{
+int PythonRtx::Open (TextureCtx &ctx) {   
+    GIL_ENTER;
+    int res = _Open(ctx);
+    GIL_EXIT;
+    return res;
+}
+
+int PythonRtx::_Open(TextureCtx &ctx) {
+
     ctx.numChannels = 3;
     ctx.minRes.X = ctx.minRes.Y = ctx.maxRes.X = ctx.maxRes.Y = 1;
     ctx.sWrap = ctx.tWrap = TextureCtx::k_Clamp;
@@ -90,8 +98,9 @@ int PythonRtx::Open (TextureCtx &ctx)
 }
 
 
-int
-PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
+int PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
+
+    // Don't need the gil for this.
 
     PyObject *py_data = (PyObject*)ctx.userData;
 
@@ -116,7 +125,9 @@ PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 int PythonRtx::Close (TextureCtx& ctx)
 {
     if (ctx.userData) {
+        GIL_ENTER;
         Py_DECREF((PyObject*)ctx.userData);
+        GIL_EXIT;
     }
     return 0;
 }
@@ -124,5 +135,6 @@ int PythonRtx::Close (TextureCtx& ctx)
 
 RTXPLUGINCREATE
 {
+    Py_Initialize();
     return new PythonRtx();
 }

@@ -13,9 +13,6 @@ int is_power_of_two (unsigned int x) {
 
 PyObject* dispatch(char const *func_name, unsigned int argc, char const **argv) {
 
-    // This can be called multiple times; no need to check.
-    Py_Initialize();
-
     // Parse arguments, pulling out "module" and "function".
     PyObject *kwargs = PyDict_New();
     char const *module_name = NULL;
