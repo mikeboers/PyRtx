@@ -32,6 +32,5 @@ def rtx_open(**kwargs):
     image = PIL.Image.open(StringIO(res.content))
     image = image.resize((1024, 1024))
     image = image.convert("RGB")
-    print image.format
     return image.size + (3, image.tostring())
 

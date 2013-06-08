@@ -10,6 +10,7 @@ LIBS := lib/DebugRtx.so lib/PythonRtx.so
 
 CFLAGS = -Iinclude -I$$RMANTREE/include $(shell python-config --cflags)
 LDFLAGS = $(shell python-config --ldflags)
+RENDERFLAGS = -t:1
 
 TEXTURES = textures/van.jpg
 
@@ -39,13 +40,13 @@ textures/van.jpg:
 
 flat: build shaders textures
 	@ mkdir -p out
-	render scenes/flat.rib
+	render ${RENDERFLAGS} scenes/flat.rib
 debug: build shaders textures
 	@ mkdir -p out
-	render scenes/debug.rib
-spheres: build shaders textures
+	render ${RENDERFLAGS} scenes/debug.rib
+flickr: build shaders textures
 	@ mkdir -p out
-	render scenes/spheres.rib
+	render ${RENDERFLAGS} scenes/flickr.rib
 
 clean:
 	- rm -rf build
