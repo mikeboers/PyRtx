@@ -4,7 +4,7 @@
 SHADERS := $(wildcard shaders/*.sl)
 SHADER_OBJS := ${SHADERS:%.sl=%.slo}
 
-LIBS := lib/Gradient.so lib/PythonRtx.so
+LIBS := lib/DebugRtx.so lib/PythonRtx.so
 
 CFLAGS = $(shell python-config --cflags) -I$$RMANTREE/include
 LDFLAGS = $(shell python-config --ldflags)
@@ -29,7 +29,14 @@ lib/%.so: build/%.o
 	g++ ${LDFLAGS} -bundle -undefined dynamic_lookup -o $@ $<
 
 flat: build shaders
+	@ mkdir -p out
 	render scenes/flat.rib
+debug: build shaders
+	@ mkdir -p out
+	render scenes/debug.rib
+spheres: build shaders
+	@ mkdir -p out
+	render scenes/spheres.rib
 
 clean:
 	- rm -rf build

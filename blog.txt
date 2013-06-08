@@ -13,3 +13,8 @@ When you iterate over the tileData pointer, go:
 
 req.tile.offset is the tile index, not the pixel offset; multiple by the tile
 size in order to get the pixel offset.
+
+the requested image res is NOT the same resolution as your photo...
+
+turns out that PRMan requires all dimensions to be powers of two, and just
+assumes that you can fill them out.

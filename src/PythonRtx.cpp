@@ -59,6 +59,9 @@ public:
     virtual int Open (TextureCtx& ctx);
     virtual int Fill (TextureCtx& ctx, FillRequest& req);
     virtual int Close (TextureCtx& ctx);
+protected:
+    int _width, _height;
+
 };
 
 
@@ -69,7 +72,9 @@ int PythonRtx::Open (TextureCtx &ctx)
     ctx.sWrap = ctx.tWrap = TextureCtx::k_Clamp;
     ctx.dataType = TextureCtx::k_Byte;
     ctx.pyramidType = TextureCtx::k_MIP;
-    ctx.isLocked = false;
+
+    // I don't know why, but without this there are strange artifacts.
+    ctx.isLocked = true;
 
     PyObject *res = dispatch("get_texture", ctx.argc, ctx.argv);
     if (!res) {
@@ -93,8 +98,8 @@ int PythonRtx::Open (TextureCtx &ctx)
         return 2;
     }
 
-    ctx.minRes.X = ctx.maxRes.X = PyInt_AS_LONG(width);
-    ctx.minRes.Y = ctx.maxRes.Y = PyInt_AS_LONG(height);
+    _width  = ctx.minRes.X = ctx.maxRes.X = PyInt_AS_LONG(width);
+    _height = ctx.minRes.Y = ctx.maxRes.Y = PyInt_AS_LONG(height);
     ctx.numChannels = PyInt_AS_LONG(depth);
 
     printf("PythonRtx: data dimensions: %d, %d, %d\n", ctx.minRes.X, ctx.minRes.Y, ctx.numChannels);
@@ -127,6 +132,14 @@ int PythonRtx::Open (TextureCtx &ctx)
 int
 PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 
+    /*
+    printf("PythonRtx::Fill(...):\n");
+    printf("\timgRes: %d, %d\n", req.imgRes.X, req.imgRes.Y);
+    printf("\ttile.offset: %d, %d\n", req.tile.offset.X, req.tile.offset.Y);
+    printf("\ttile.size: %d, %d\n", req.tile.size.X, req.tile.size.Y);
+    printf("\t%d channels from %d\n", req.numChannels, req.channelOffset);
+    //*/
+
     PyObject *py_data = (PyObject*)ctx.userData;
 
     char *src_data = py_data ? PyString_AS_STRING(py_data) : NULL;
@@ -136,7 +149,7 @@ PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
     for (int xi = 0, x = req.tile.offset.X * req.tile.size.X; xi < req.tile.size.X; xi++, x++) {
     for (int ci = 0, c = req.channelOffset; ci < req.numChannels; ci++, c++) {
         if (src_data) {
-            int offset = c + req.numChannels * x + req.numChannels * req.imgRes.X * y;
+            int offset = c + req.numChannels * x + req.numChannels * _width * y;
             *(dst_data++) = src_data[offset];
         } else {
             *(dst_data++) = 127;

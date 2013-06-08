@@ -1,4 +1,4 @@
-Display "out/spheres.tif" "tiff" "rgba"
+Display "out/debug.tif" "tiff" "rgba"
 Projection "perspective" "fov" [21.831]
 Format 640 480 1
 
@@ -6,16 +6,17 @@ Option "searchpath"
     "shader" "shaders:@"
     "texture" "lib:@"
 
-
 Translate 0 -1.207 14.142
 Rotate 59.036 0 1 0
 Rotate -26.565 6 0 10
+Rotate 180 0 1 0
 
 WorldBegin
     
     
+    
     Color 1 1 1
-    Surface "python_rtx"
+    Surface "debug_rtx"
 
     # Floor.
     TransformBegin
