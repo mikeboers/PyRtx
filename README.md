@@ -12,10 +12,16 @@ $ virtualenv venv
 $ . venv/bin/activate
 $ pip install requests pil
 $ make
+$ make debug
+~~~
+
+![Debug Results](http://mikeboers.com/imgsizer/blog/2013-06-08-pyrtx/debug.png?v=UbObSQ&w=400&s=6nd5HqYwsn256ciJ8XDH_CXuvZg)
+
+~~~
 $ make flickr
 ~~~
 
-(place results here)
+![Random Flickr Textures](http://mikeboers.com/imgsizer/blog/2013-06-08-pyrtx/flickr.png?v=UbOXYg&w=400&s=XLewULwA2s-1wqY_1Tf2KYJ-YN8)
 
 
 Usage
