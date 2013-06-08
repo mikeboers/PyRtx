@@ -13,7 +13,7 @@ WorldBegin
     
     
     Color 1 1 1
-    Surface "python_rtx"
+    Surface "static_example"
 
     Polygon "P" [
         1 0 0

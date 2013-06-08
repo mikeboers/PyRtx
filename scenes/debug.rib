@@ -16,7 +16,7 @@ WorldBegin
     
     
     Color 1 1 1
-    Surface "debug_rtx"
+    Surface "static_example"
 
     # Floor.
     TransformBegin

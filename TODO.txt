@@ -1,18 +1,10 @@
 
 
-- Rtx plugin which uses returned data as an image:
+- URI: "rtxplugin:Python?module=package.module&function=entrypoint"
+  - module is required
+  - function defaults to "rtx_open"
+  - remaining args are passed as kwargs
 
-  - texture: "rtxplugin:Python?module=package.module&function=entrypoint"
-  - query args:
-      - "entrypoint" OR "module" and "function"
-      - "args": string to pass as args
-      OR
-      - entrypoint=package.module.function(1, 2, key=value)
-      - spaces are NOT allowed
-      OR
-      - entrypoint -> func to call
-      - *args -> split into args
-      - rest passed as kwargs
 
 - embed Python into a RSL shadeop
     

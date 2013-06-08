@@ -1,63 +1,10 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include "ri.h"
 #include "RtxPlugin.h"
 #include "Python.h"
 
-
-static bool initialized = false;
-static PyObject *runtime_module;
-
-
-static int is_power_of_two (unsigned int x) {
-    while (((x & 1) == 0) && x > 1) {
-        x >>= 1;
-    }
-    return x == 1;
-}
-
-
-static PyObject* dispatch(char const *func_name, PyObject *args) {
-
-    if (!initialized) {
-        Py_Initialize();
-        runtime_module = PyImport_ImportModule("PythonRtx");
-        if (!runtime_module) {
-            printf("PythonRtx: could not import PythonRtx:\n");
-            PyErr_Print();
-            return NULL;
-        }
-    }
-
-    PyObject *func = PyObject_GetAttrString(runtime_module, func_name);
-    if (!func) {
-        printf("PythonRtx: could not find PythonRtx.%s:\n", func_name);
-        PyErr_Print();
-        return NULL;
-    }
-
-    PyObject *res = PyObject_CallObject(func, args);
-
-    if (!res) {
-        printf("PythonRtx: exception while calling PythonRtx.%s:\n", func_name);
-        PyErr_Print();
-    }
-
-    Py_DECREF(func);
-    return res;
-
-}
-
-static PyObject* dispatch(char const *func_name, unsigned int argc, char const **argv) {
-    PyObject *args = PyTuple_New(argc);
-    for (unsigned int i = 0; i < argc; i++) {
-        PyTuple_SET_ITEM(args, i, PyString_FromString(argv[i]));
-    }
-    PyObject *res = dispatch(func_name, args);
-    Py_DECREF(args);
-    return res;
-}
+#include "utils.hpp"
 
 
 class PythonRtx : public RtxPlugin
@@ -85,7 +32,7 @@ int PythonRtx::Open (TextureCtx &ctx)
     // I don't know why, but without this there are strange artifacts.
     ctx.isLocked = true;
 
-    PyObject *res = dispatch("get_texture", ctx.argc, ctx.argv);
+    PyObject *res = dispatch("rtx_open", ctx.argc, ctx.argv);
     if (!res) {
         return 1;
     }
@@ -146,14 +93,6 @@ int PythonRtx::Open (TextureCtx &ctx)
 int
 PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 
-    /*
-    printf("PythonRtx::Fill(...):\n");
-    printf("\timgRes: %d, %d\n", req.imgRes.X, req.imgRes.Y);
-    printf("\ttile.offset: %d, %d\n", req.tile.offset.X, req.tile.offset.Y);
-    printf("\ttile.size: %d, %d\n", req.tile.size.X, req.tile.size.Y);
-    printf("\t%d channels from %d\n", req.numChannels, req.channelOffset);
-    //*/
-
     PyObject *py_data = (PyObject*)ctx.userData;
 
     char *src_data = py_data ? PyString_AS_STRING(py_data) : NULL;
@@ -176,7 +115,6 @@ PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 
 int PythonRtx::Close (TextureCtx& ctx)
 {
-    printf("PythonRtx::Close()\n");
     if (ctx.userData) {
         Py_DECREF((PyObject*)ctx.userData);
     }
