@@ -8,14 +8,14 @@ SRCS := src/utils.cpp
 OBJS := ${SRCS:src/%.cpp=build/%.o}
 LIBS := lib/DebugRtx.so lib/PythonRtx.so
 
-CFLAGS := -g -Iinclude -I$$RMANTREE/include $(shell python-config --cflags)
-CFLAGS := $(subst -Wstrict-prototypes,,${CFLAGS})
-LDFLAGS := $(shell python-config --ldflags)
-RENDERFLAGS := 
+CFLAGS := -g -Iinclude -I$$RMANTREE/include $(shell python-config --includes)
+LDFLAGS := $(shell python-config --libs)
+RENDERFLAGS :=
 
 TEXTURES := textures/van.jpg
 
 .PHONY: default build shaders flat clean textures
+.PRECIOUS: build/%.o
 
 default: build
 
