@@ -105,17 +105,22 @@ int PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
     char *src_data = py_data ? PyString_AS_STRING(py_data) : NULL;
     char *dst_data = (char *)req.tileData;
 
-    for (int yi = 0, y = req.tile.offset.Y * req.tile.size.Y; yi < req.tile.size.Y; yi++, y++) {
-    for (int xi = 0, x = req.tile.offset.X * req.tile.size.X; xi < req.tile.size.X; xi++, x++) {
-    for (int ci = 0, c = req.channelOffset; ci < req.numChannels; ci++, c++) {
-        if (src_data) {
+    // This can be made more efficient by copying entire rows of data if all of
+    // the channels are being requested.
+    if (req.numChannels == ctx.numChannels) {
+        int row_size = req.tile.size.X * req.numChannels;
+        for (int yi = 0, y = req.tile.offset.Y * req.tile.size.Y; yi < req.tile.size.Y; yi++, y++) {
+            int offset = req.numChannels * req.tile.offset.X * req.tile.size.X + req.numChannels * _width * y;
+            memcpy((void*)(dst_data + yi * row_size), (void*)(src_data + offset), row_size);
+        }
+    } else {
+        for (int yi = 0, y = req.tile.offset.Y * req.tile.size.Y; yi < req.tile.size.Y; yi++, y++) {
+        for (int xi = 0, x = req.tile.offset.X * req.tile.size.X; xi < req.tile.size.X; xi++, x++) {
+        for (int ci = 0, c = req.channelOffset; ci < req.numChannels; ci++, c++) {
             int offset = c + req.numChannels * x + req.numChannels * _width * y;
             *(dst_data++) = src_data[offset];
-        } else {
-            *(dst_data++) = 127;
-        }
-    }}}
-    
+        }}}
+    }
     return 0;
 }
 
