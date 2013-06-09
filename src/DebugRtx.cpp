@@ -30,7 +30,7 @@ DebugRtx::Open (TextureCtx &ctx)
     ctx.isLocked = false;
 
     printf("DebugRtx::Open(...) with %d args.\n", ctx.argc);
-    for (int i = 0; i < ctx.argc; i++) {
+    for (unsigned int i = 0; i < ctx.argc; i++) {
         printf("\t%d: \"%s\"\n", i, ctx.argv[i]);
     }
 
@@ -86,6 +86,9 @@ int DebugRtx::Close (TextureCtx& ctx)
     }
     return 0;
 }
+
+
+__attribute__((constructor)) static void _init() { printf("_init\n"); }
 
 
 RTXPLUGINCREATE

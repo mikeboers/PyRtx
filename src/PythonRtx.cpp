@@ -23,7 +23,9 @@ protected:
 
 
 int PythonRtx::Open (TextureCtx &ctx) {   
+    Py_GIL_ENSURE;
     int res = _Open(ctx);
+    Py_GIL_RELEASE;
     return res;
 }
 
@@ -34,9 +36,7 @@ int PythonRtx::_Open(TextureCtx &ctx) {
     ctx.sWrap = ctx.tWrap = TextureCtx::k_Clamp;
     ctx.dataType = TextureCtx::k_Byte;
     ctx.pyramidType = TextureCtx::k_MIP;
-
-    // I don't know why, but without this there are strange artifacts.
-    ctx.isLocked = true;
+    ctx.isLocked = false;
 
     PyObject *res = dispatch("rtx_open", ctx.argc, ctx.argv);
     if (!res) {
@@ -98,11 +98,10 @@ int PythonRtx::_Open(TextureCtx &ctx) {
 
 int PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 
-    // Don't need the gil for this.
-
-    PyObject *py_data = (PyObject*)ctx.userData;
-
-    char *src_data = py_data ? PyString_AS_STRING(py_data) : NULL;
+    // Don't need the gil for this since we are accessing the data directly,
+    // and we don't need to check it exists since we would have returned an
+    // error from Open (and so this won't get called).
+    char *src_data = PyString_AS_STRING((PyObject*)ctx.userData);
     char *dst_data = (char *)req.tileData;
 
     // This can be made more efficient by copying entire rows of data if all of
@@ -128,7 +127,9 @@ int PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 int PythonRtx::Close (TextureCtx& ctx)
 {
     if (ctx.userData) {
+        Py_GIL_ENSURE;
         Py_DECREF((PyObject*)ctx.userData);
+        Py_GIL_RELEASE;
     }
     return 0;
 }
@@ -136,6 +137,10 @@ int PythonRtx::Close (TextureCtx& ctx)
 
 RTXPLUGINCREATE
 {
-    Py_Initialize();
+    if (!Py_IsInitialized()) {
+        Py_Initialize();
+        PyEval_InitThreads(); //Initialize Python thread ability
+        PyEval_ReleaseLock(); //Release the implicit lock on the Python GIL
+    }
     return new PythonRtx();
 }
