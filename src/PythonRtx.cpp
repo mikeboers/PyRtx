@@ -23,9 +23,7 @@ protected:
 
 
 int PythonRtx::Open (TextureCtx &ctx) {   
-    GIL_ENTER;
     int res = _Open(ctx);
-    GIL_EXIT;
     return res;
 }
 
@@ -125,9 +123,7 @@ int PythonRtx::Fill (TextureCtx& ctx, FillRequest& req) {
 int PythonRtx::Close (TextureCtx& ctx)
 {
     if (ctx.userData) {
-        GIL_ENTER;
         Py_DECREF((PyObject*)ctx.userData);
-        GIL_EXIT;
     }
     return 0;
 }
