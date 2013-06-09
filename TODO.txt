@@ -2,7 +2,7 @@
 Rtx Plugin
 ----------
 
-- aquire the GIL
+- Deal with the GIL
   http://docs.python.org/2/c-api/init.html#non-python-created-threads
 
 

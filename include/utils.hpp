@@ -3,15 +3,14 @@
 
 #include "Python.h"
 
-#define Py_GIL_DEBUG 0
+#define Py_GIL_DEBUG 1
 
 #define Py_GIL_ENSURE  \
     if (Py_GIL_DEBUG) { \
         printf("Aquiring GIL at %s:%d from 0x%lx ... ", __FILE__, __LINE__, (long)PyThreadState_Get()); \
         fflush(stdout); \
     } \
-    /* PyGILState_STATE _gil_state; */ \
-    /* _gil_state = PyGILState_Ensure(); */ \
+    /* PyGILState_STATE _gil_state = PyGILState_Ensure(); */ \
     PyEval_AcquireLock(); \
     if (Py_GIL_DEBUG) printf("Done.\n");
 
