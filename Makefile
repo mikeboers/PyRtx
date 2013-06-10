@@ -10,7 +10,7 @@ LIBS := lib/DebugRtx.so lib/PythonRtx.so
 
 CFLAGS := -g -Iinclude -I$$RMANTREE/include $(shell python-config --includes)
 LDFLAGS := $(shell python-config --libs)
-RENDERFLAGS :=
+RENDERFLAGS := -t:1
 
 TEXTURES := textures/van.jpg
 
