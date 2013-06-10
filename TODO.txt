@@ -5,6 +5,8 @@ Rtx Plugin
 - Deal with the GIL
   http://docs.python.org/2/c-api/init.html#non-python-created-threads
 
+- Examples should linearize colours.
+
 
 RSL Shadeop
 -----------

@@ -47,4 +47,5 @@ Caveats
 - This currently behaves very badly when multithreaded; use ``-t:1`` in your renders if there is more than once instance of this plugin being used. I am working on understanding how to grab the GIL in this scenario.
 - Image dimensions **MUST** be a power of two.
 - We can currently only supply uint8 data, even though PRMan will take floats.
+- The examples do not linearize image data.
 
